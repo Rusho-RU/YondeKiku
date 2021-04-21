@@ -1,38 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/btnStartRecord"
-        android:text="RECORD"
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp" />
+
+    <TextView
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </Button>
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/progressBar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="47dp" />
 
-    <Button
-        android:id="@+id/btnStopRecord"
-        android:text="STOP RECORD"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </Button>
-
-    <Button
-        android:id="@+id/btnPlay"
-        android:text="PLAY"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </Button>
-
-    <Button
-        android:id="@+id/btnStop"
-        android:text="STOP"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </Button>
-
-</LinearLayout>
+</RelativeLayout>
