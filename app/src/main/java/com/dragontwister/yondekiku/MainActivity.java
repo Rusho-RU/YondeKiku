@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
     @Override
     public void onResults(@NotNull List<String> results, @Nullable float[] scores) {
         textView.setText(results.toString());
+        manager.startRecognition();
     }
 
     @Override
