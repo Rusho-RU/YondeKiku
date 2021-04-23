@@ -20,8 +20,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements RecognitionCallback {
-    private String activationWords = "[hello]";
-    private String deactivationWords = "[that is all]";
+    private final String[] activationWords = new String[] {"hello"};
+    private final String[] deactivationWords = new String[] {"thanks"};
+
     private static final int RECORD_AUDIO_REQUEST_CODE = 101;
 
     private ProgressBar progressBar;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
 
         progressBar.setIndeterminate(false);
         progressBar.setVisibility(View.VISIBLE);
+
         manager.startRecognition();
     }
 
@@ -62,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
 
     @Override
     public void onResults(@NotNull List<String> results, @Nullable float[] scores) {
-        textView.setText(results.toString());
+        textView.setText(String.join(". ", results) + ".");
         manager.startRecognition();
     }
 
@@ -70,5 +72,11 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
     public void setText(String txt) {
         textView.setText(txt);
         manager.startRecognition();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        manager.stopRecognition();
     }
 }

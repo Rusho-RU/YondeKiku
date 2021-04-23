@@ -10,17 +10,17 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 
 import com.dragontwister.yondekiku.interfaces.RecognitionCallback;
-import com.dragontwister.yondekiku.models.RecognitionStatus;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ContinuousRecognitionManager implements RecognitionListener {
-    private static final int SILENCE_TIME_in_MILLIS = 20;
+    private static final int SILENCE_TIME_in_MILLIS = 300;
     private Context context;
     private RecognitionCallback callback;
-    private String activationWords;
-    private String deactivationWords;
+    private String[] activationWords;
+    private String[] deactivationWords;
     private boolean shouldMute;
 
     private AudioManager audioManager;
@@ -32,7 +32,7 @@ public class ContinuousRecognitionManager implements RecognitionListener {
 
     private List<String> matches;
 
-    public ContinuousRecognitionManager(Context context, String activationWords, String deactivationWords, boolean shouldMute, RecognitionCallback callback){
+    public ContinuousRecognitionManager(Context context, String[] activationWords, String[] deactivationWords, boolean shouldMute, RecognitionCallback callback){
         this.context = context;
         this.callback = callback;
         this.activationWords = activationWords;
@@ -40,6 +40,11 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         this.shouldMute = shouldMute;
 
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager.isBluetoothA2dpOn()) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.startBluetoothSco();
+            audioManager.setBluetoothScoOn(true);
+        }
 
         speech = SpeechRecognizer.createSpeechRecognizer(context);
 
@@ -47,7 +52,6 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, SILENCE_TIME_in_MILLIS);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 //        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en");
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
 
@@ -61,6 +65,9 @@ public class ContinuousRecognitionManager implements RecognitionListener {
 
     public void stopRecognition() {
         speech.stopListening();
+//        audioManager.setMode(AudioManager.MODE_NORMAL);
+//        audioManager.stopBluetoothSco();
+//        audioManager.setBluetoothScoOn(false);
     }
 
     public void cancelRecognition() {
@@ -135,29 +142,36 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         float[] scores = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
 
         if(hold != null){
+            String text = String.join(". ", hold);
+
             if(isSpeaking){
-                if(hold.toString().toLowerCase().contains(deactivationWords)){
+                if(Arrays.stream(deactivationWords).anyMatch(text::contains)){
                     isSpeaking = false;
-                    stopRecognition();
+                    matches.add(text);
                     callback.onResults(matches, scores);
+                    startRecognition();
                 } else{
-                    matches.add(hold.toString());
+                    matches.add(text);
                     startRecognition();
                 }
-            } else if(hold.toString().contains(activationWords)){
-                callback.setText("Activation word detected");
+            } else if(Arrays.stream(activationWords).anyMatch(text::contains)){
                 isSpeaking = true;
                 matches.clear();
+                matches.add(text);
+                callback.setText("Activation word detected");
                 startRecognition();
             }
-        }
 
-        startRecognition();
+            else
+                startRecognition();
+        }
+        else
+            startRecognition();
     }
 
     @Override
     public void onPartialResults(Bundle partialResults) {
-
+        callback.setText("Partial");
     }
 
     @Override
