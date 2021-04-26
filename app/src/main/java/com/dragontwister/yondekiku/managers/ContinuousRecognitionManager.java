@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ContinuousRecognitionManager implements RecognitionListener {
-    private static final int SILENCE_TIME_in_MILLIS = 300;
+    private static final int SILENCE_TIME_in_MILLIS = 500;
     private Context context;
     private RecognitionCallback callback;
     private String[] activationWords;
