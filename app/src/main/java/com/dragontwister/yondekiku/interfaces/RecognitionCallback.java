@@ -7,27 +7,25 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface RecognitionCallback {
-    //    void onPrepared(@NotNull RecognitionStatus status);
+//    void onPrepared(@NotNull RecognitionStatus status);
 //
 //    void onBeginningOfSpeech();
 //
-    void onKeywordDetected();
-    //
+    void onKeywordDetected(String type);
+//
 //    void onReadyForSpeech(@NotNull Bundle params);
 //
 //    void onBufferReceived(@NotNull byte[] buffer);
 //
     void onRmsChanged(float rmsdB);
-    //
+//
 //    void onPartialResults(@NotNull List <String> results);
 //
-    void onResults(@NotNull List <String> results, @Nullable float[] scores);
+    void onResults(@NotNull List <String> results);
 //
 //    void onError(int errorCode);
 //
 //    void onEvent(int eventType, @NotNull Bundle params);
 //
 //    void onEndOfSpeech();
-
-    void setText(String txt);
 }

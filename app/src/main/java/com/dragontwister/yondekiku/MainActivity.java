@@ -8,12 +8,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dragontwister.yondekiku.interfaces.RecognitionCallback;
@@ -21,12 +21,14 @@ import com.dragontwister.yondekiku.managers.ContinuousRecognitionManager;
 import com.dragontwister.yondekiku.managers.MessageAdapter;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.InetAddress;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.EventListener;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -42,36 +44,36 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
     private ContinuousRecognitionManager manager;
 
 //    Text View variables
-    private String name;
+    private ProgressBar progressBar;
+    private TextView textView;
+    private String name = "Anonymous";
     private RecyclerView recyclerView;
     private MessageAdapter messageAdapter;
 
 //    Socket connection variables
     private WebSocket webSocket;
-    private String SERVER_PATH = "ws://SERVER-IP-HERE:PORT-NUMBER-HERE";
+//    private String SERVER_PATH = "https://websockt-asr.herokuapp.com/";
+    private String SERVER_PATH = "ws://192.168.0.102:3000/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
+        setContentView(R.layout.activity_main);
 
 //        Socket connection initialization
-//        initiateSocketConnection();
+        initiateSocketConnection();
 
-//        Textview Initialization
-        EditText editText = new EditText(this);
-        new AlertDialog.Builder(this)
-                .setTitle("Enter name")
-                .setView(editText)
-                .setPositiveButton("confirm", (dialog, which) -> {
-                    name = editText.getText().toString();
-                })
-                .create()
-                .show();
+//        Text view Initialization
         recyclerView = findViewById(R.id.recyclerView);
         messageAdapter = new MessageAdapter(getLayoutInflater());
         recyclerView.setAdapter(messageAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        progressBar = findViewById(R.id.progressBar);
+        textView = findViewById(R.id.textView);
+
+        progressBar.setMax(10);
+        textView.setText("Say \"hello\" to start talking and \"thanks\" to end speech immediately or just pause");
 
 //          Speech Recognition Initialization
         manager = new ContinuousRecognitionManager(this, activationWords, deactivationWords, false, this);
@@ -80,16 +82,25 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_REQUEST_CODE);
         }
 
-        manager.startRecognition();
+        EditText editText = new EditText(this);
+        new AlertDialog.Builder(this)
+                .setTitle("Enter name")
+                .setView(editText)
+                .setPositiveButton("confirm", (dialog, which) -> {
+                    name = editText.getText().toString();
+                    progressBar.setVisibility(View.VISIBLE);
+                    textView.setVisibility(View.VISIBLE);
+                    manager.startRecognition();
+                })
+                .create()
+                .show();
     }
 
 //    Socket connection functions
     private void initiateSocketConnection() {
-
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder().url(SERVER_PATH).build();
         webSocket = client.newWebSocket(request, new MainActivity.SocketListener());
-
     }
 
 //    Text view functions
@@ -98,10 +109,11 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         try {
             jsonObject.put("name", name);
             jsonObject.put("message", string);
-//            webSocket.send(jsonObject.toString());
+            webSocket.send(jsonObject.toString());
             jsonObject.put("isSent", true);
             messageAdapter.addItem(jsonObject);
-            recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
+            if(messageAdapter.getItemCount() > 0)
+                recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
         } catch (JSONException e){
             e.printStackTrace();
         }
@@ -109,25 +121,28 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
 
 //    Speech recognition functions
     @Override
-    public void onKeywordDetected() {
-
+    public void onKeywordDetected(String type){
+        switch (type){
+            case "active": setTextView(name + " is speaking now...");
+            break;
+            case "deactivate" : setTextView(name + " has finished speech");
+            break;
+        }
     }
 
     @Override
     public void onRmsChanged(float rmsdB) {
-//        progressBar.setProgress((int)rmsdB);
+        progressBar.setProgress((int)rmsdB);
     }
 
     @Override
-    public void onResults(@NotNull List<String> results, @Nullable float[] scores) {
-        setTextView(String.join(". ", results) + ".");
-        manager.startRecognition();
-    }
+    public void onResults(@NotNull List<String> results) {
+        String text = "";
+        for(int i=0; i<results.size(); i++){
+            text+=results.get(i) + ". ";
+        }
 
-    @Override
-    public void setText(String txt) {
-        setTextView("Activated");
-        manager.startRecognition();
+        setTextView(text);
     }
 
     @Override
@@ -154,7 +169,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
             super.onMessage(webSocket, text);
 
             runOnUiThread(() -> {
-
                 try {
                     JSONObject jsonObject = new JSONObject(text);
                     jsonObject.put("isSent", false);
@@ -162,11 +176,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
                     messageAdapter.addItem(jsonObject);
 
                     recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
             });
 
         }

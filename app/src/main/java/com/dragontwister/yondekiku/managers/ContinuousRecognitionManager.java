@@ -16,11 +16,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ContinuousRecognitionManager implements RecognitionListener {
-    private static final int SILENCE_TIME_in_MILLIS = 500;
     private Context context;
-    private RecognitionCallback callback;
-    private String[] activationWords;
-    private String[] deactivationWords;
+    private final RecognitionCallback callback;
+    private final String[] activationWords;
+    private final String[] deactivationWords;
     private boolean shouldMute;
 
     private AudioManager audioManager;
@@ -31,6 +30,7 @@ public class ContinuousRecognitionManager implements RecognitionListener {
     public boolean isSpeaking = false;
 
     private List<String> matches;
+    private int count = 0;
 
     public ContinuousRecognitionManager(Context context, String[] activationWords, String[] deactivationWords, boolean shouldMute, RecognitionCallback callback){
         this.context = context;
@@ -49,8 +49,8 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         speech = SpeechRecognizer.createSpeechRecognizer(context);
 
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, SILENCE_TIME_in_MILLIS);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+//        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
 //        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en");
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
@@ -131,6 +131,16 @@ public class ContinuousRecognitionManager implements RecognitionListener {
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT : {
                 destroyRecognizer();
             }
+            case SpeechRecognizer.ERROR_NO_MATCH:{
+                count++;
+                if(count==2 && matches.size() > 0) {
+                    isSpeaking = false;
+                    callback.onResults(matches);
+                    matches.clear();
+                    callback.onKeywordDetected("deactivate");
+                    count = 0;
+                }
+            }
         }
 
         startRecognition();
@@ -138,40 +148,36 @@ public class ContinuousRecognitionManager implements RecognitionListener {
 
     @Override
     public void onResults(Bundle results) {
+        count = 0;
         List<String> hold = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        float[] scores = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
 
-        if(hold != null){
-            String text = String.join(". ", hold);
-
-            if(isSpeaking){
-                if(Arrays.stream(deactivationWords).anyMatch(text::contains)){
-                    isSpeaking = false;
-                    matches.add(text);
-                    callback.onResults(matches, scores);
-                    startRecognition();
-                } else{
-                    matches.add(text);
-                    startRecognition();
-                }
-            } else if(Arrays.stream(activationWords).anyMatch(text::contains)){
-                isSpeaking = true;
-                matches.clear();
-                matches.add(text);
-                callback.setText("Activation word detected");
-                startRecognition();
-            }
-
-            else
-                startRecognition();
+        String text = "";
+        for(int i=0; i<hold.size(); i++){
+            text+=hold.get(i);
         }
-        else
-            startRecognition();
+
+        if(isSpeaking){
+            if(Arrays.stream(deactivationWords).anyMatch(text::contains)){
+                isSpeaking = false;
+                matches.add(text);
+                callback.onResults(matches);
+                callback.onKeywordDetected("deactivate");
+            } else{
+                matches.add(text);
+            }
+        } else if(Arrays.stream(activationWords).anyMatch(text::contains)){
+            isSpeaking = true;
+            matches.clear();
+            matches.add(text);
+            callback.onKeywordDetected("active");
+        }
+
+        startRecognition();
     }
 
     @Override
     public void onPartialResults(Bundle partialResults) {
-        callback.setText("Partial");
+
     }
 
     @Override
