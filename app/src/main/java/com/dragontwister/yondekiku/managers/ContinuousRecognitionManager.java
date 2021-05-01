@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ContinuousRecognitionManager implements RecognitionListener {
-    private Context context;
     private final RecognitionCallback callback;
     private final String[] activationWords;
     private final String[] deactivationWords;
@@ -33,7 +32,6 @@ public class ContinuousRecognitionManager implements RecognitionListener {
     private int count = 0;
 
     public ContinuousRecognitionManager(Context context, String[] activationWords, String[] deactivationWords, boolean shouldMute, RecognitionCallback callback){
-        this.context = context;
         this.callback = callback;
         this.activationWords = activationWords;
         this.deactivationWords = deactivationWords;
@@ -49,10 +47,8 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         speech = SpeechRecognizer.createSpeechRecognizer(context);
 
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-//        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
-//        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en");
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
 
         matches = new ArrayList<>();
@@ -65,9 +61,9 @@ public class ContinuousRecognitionManager implements RecognitionListener {
 
     public void stopRecognition() {
         speech.stopListening();
-//        audioManager.setMode(AudioManager.MODE_NORMAL);
-//        audioManager.stopBluetoothSco();
-//        audioManager.setBluetoothScoOn(false);
+        audioManager.setMode(AudioManager.MODE_NORMAL);
+        audioManager.stopBluetoothSco();
+        audioManager.setBluetoothScoOn(false);
     }
 
     public void cancelRecognition() {
@@ -79,22 +75,13 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         speech.destroy();
     }
 
-    @SuppressWarnings( "deprecation" )
     private void muteRecognition(boolean mute){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            int flag = mute ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE;
-            audioManager.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, flag, 0);
-            audioManager.adjustStreamVolume(AudioManager.STREAM_ALARM, flag, 0);
-            audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, flag, 0);
-            audioManager.adjustStreamVolume(AudioManager.STREAM_RING, flag, 0);
-            audioManager.adjustStreamVolume(AudioManager.STREAM_SYSTEM, flag, 0);
-        } else {
-            audioManager.setStreamMute(AudioManager.STREAM_NOTIFICATION, mute);
-            audioManager.setStreamMute(AudioManager.STREAM_ALARM, mute);
-            audioManager.setStreamMute(AudioManager.STREAM_MUSIC, mute);
-            audioManager.setStreamMute(AudioManager.STREAM_RING, mute);
-            audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, mute);
-        }
+        int flag = mute ? AudioManager.ADJUST_MUTE : AudioManager.ADJUST_UNMUTE;
+        audioManager.adjustStreamVolume(AudioManager.STREAM_NOTIFICATION, flag, 0);
+        audioManager.adjustStreamVolume(AudioManager.STREAM_ALARM, flag, 0);
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, flag, 0);
+        audioManager.adjustStreamVolume(AudioManager.STREAM_RING, flag, 0);
+        audioManager.adjustStreamVolume(AudioManager.STREAM_SYSTEM, flag, 0);
     }
 
     @Override
@@ -151,25 +138,25 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         count = 0;
         List<String> hold = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
-        String text = "";
+        StringBuilder text = new StringBuilder();
         for(int i=0; i<hold.size(); i++){
-            text+=hold.get(i);
+            text.append(hold.get(i));
         }
 
         if(isSpeaking){
-            if(Arrays.stream(deactivationWords).anyMatch(text::contains)){
+            if(Arrays.stream(deactivationWords).anyMatch(text.toString()::contains)){
                 isSpeaking = false;
-                matches.add(text);
+                matches.add(text.toString());
                 callback.onResults(matches);
                 matches.clear();
                 callback.onKeywordDetected("deactivate");
             } else{
-                matches.add(text);
+                matches.add(text.toString());
             }
-        } else if(Arrays.stream(activationWords).anyMatch(text::contains)){
+        } else if(Arrays.stream(activationWords).anyMatch(text.toString()::contains)){
             isSpeaking = true;
             matches.clear();
-            matches.add(text);
+            matches.add(text.toString());
             callback.onKeywordDetected("active");
         }
 

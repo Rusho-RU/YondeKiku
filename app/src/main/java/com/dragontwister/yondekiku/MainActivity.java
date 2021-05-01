@@ -137,12 +137,12 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
 
     @Override
     public void onResults(@NotNull List<String> results) {
-        String text = "";
+        StringBuilder text = new StringBuilder();
         for(int i=0; i<results.size(); i++){
-            text+=results.get(i) + ". ";
+            text.append(results.get(i)).append(". ");
         }
 
-        setTextView(text);
+        setTextView(text.toString());
     }
 
     @Override
