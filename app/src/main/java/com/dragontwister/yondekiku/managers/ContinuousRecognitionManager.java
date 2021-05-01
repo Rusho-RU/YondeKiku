@@ -161,6 +161,7 @@ public class ContinuousRecognitionManager implements RecognitionListener {
                 isSpeaking = false;
                 matches.add(text);
                 callback.onResults(matches);
+                matches.clear();
                 callback.onKeywordDetected("deactivate");
             } else{
                 matches.add(text);
