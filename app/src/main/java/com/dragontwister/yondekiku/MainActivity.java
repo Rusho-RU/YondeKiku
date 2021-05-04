@@ -24,11 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.InetAddress;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.EventListener;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -36,7 +33,6 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
 public class MainActivity extends AppCompatActivity implements RecognitionCallback {
-
 //    Speech Recognition variables
     private final String[] activationWords = new String[] {"hello"};
     private final String[] deactivationWords = new String[] {"thanks"};
@@ -52,8 +48,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
 
 //    Socket connection variables
     private WebSocket webSocket;
-//    private String SERVER_PATH = "https://websockt-asr.herokuapp.com/";
-    private String SERVER_PATH = "ws://192.168.0.102:3000/";
+    private String SERVER_PATH = "https://websockt-asr.herokuapp.com/";
+//    private String SERVER_PATH = "ws://192.168.0.102:3000/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
