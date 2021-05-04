@@ -20,14 +20,14 @@ public class MessageAdapter extends RecyclerView.Adapter {
     private static final int TYPE_MESSAGE_SENT = 0;
     private static final int TYPE_MESSAGE_RECEIVED = 1;
 
-    private LayoutInflater inflater;
-    private List<JSONObject> messages = new ArrayList<>();
+    private final LayoutInflater inflater;
+    private final List<JSONObject> messages = new ArrayList<>();
 
     public MessageAdapter (LayoutInflater inflater) {
         this.inflater = inflater;
     }
 
-    private class SentMessageHolder extends RecyclerView.ViewHolder {
+    private static class SentMessageHolder extends RecyclerView.ViewHolder {
 
         TextView messageTxt;
 
@@ -38,7 +38,7 @@ public class MessageAdapter extends RecyclerView.Adapter {
         }
     }
 
-    private class ReceivedMessageHolder extends RecyclerView.ViewHolder {
+    private static class ReceivedMessageHolder extends RecyclerView.ViewHolder {
 
         TextView nameTxt, messageTxt;
 
