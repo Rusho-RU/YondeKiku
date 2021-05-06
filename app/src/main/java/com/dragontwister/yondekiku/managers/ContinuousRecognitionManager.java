@@ -38,11 +38,6 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         this.shouldMute = shouldMute;
 
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        if (audioManager.isBluetoothA2dpOn()) {
-            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            audioManager.startBluetoothSco();
-            audioManager.setBluetoothScoOn(true);
-        }
 
         speech = SpeechRecognizer.createSpeechRecognizer(context);
 
@@ -55,6 +50,16 @@ public class ContinuousRecognitionManager implements RecognitionListener {
     }
 
     public void startRecognition(){
+        if (audioManager.isBluetoothA2dpOn()) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.startBluetoothSco();
+            audioManager.setBluetoothScoOn(true);
+        } else{
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+            audioManager.stopBluetoothSco();
+            audioManager.setBluetoothScoOn(false);
+        }
+
         speech.setRecognitionListener(this);
         speech.startListening(recognizerIntent);
     }
