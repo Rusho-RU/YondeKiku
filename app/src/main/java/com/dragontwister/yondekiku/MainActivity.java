@@ -106,9 +106,12 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
             webSocket.send(jsonObject.toString());
             jsonObject.put("isSent", true);
 
-            if(string == "~"){
+            if(string.equals("~")){
                 textView.setText(name + " is speaking");
-            } else{
+            } else if(string.equals("~~")){
+                textView.setText("");
+            }
+            else{
                 messageAdapter.addItem(jsonObject);
             }
 
@@ -129,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         switch (type){
             case "activate": setTextView("~");
             break;
-            case "deactivate": textView.setText("");
+            case "deactivate": setTextView("~~");
         }
     }
 
@@ -173,16 +176,15 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
                 try {
                     JSONObject jsonObject = new JSONObject(text);
 
-                    if(jsonObject.getString("message") == "~") {
+                    if(jsonObject.getString("message").equals("~")) {
                         textView.setText(jsonObject.getString("name") + " is speaking");
-                        return;
+                    } else if(jsonObject.getString("message").equals("~~")){
+                        textView.setText("");
+                    } else {
+                        jsonObject.put("isSent", false);
+                        messageAdapter.addItem(jsonObject);
+                        recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
                     }
-
-                    jsonObject.put("isSent", false);
-
-                    messageAdapter.addItem(jsonObject);
-
-                    recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
