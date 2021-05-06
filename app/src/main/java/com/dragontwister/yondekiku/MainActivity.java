@@ -25,7 +25,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -150,18 +153,16 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
     private class SocketListener extends WebSocketListener {
 
         @Override
-        public void onOpen(WebSocket webSocket, Response response) {
+        public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
             super.onOpen(webSocket, response);
 
-            runOnUiThread(() -> {
-                Toast.makeText(MainActivity.this,
-                        "Socket Connection Successful!",
-                        Toast.LENGTH_SHORT).show();
-            });
+            runOnUiThread(() -> Toast.makeText(MainActivity.this,
+                    "Socket Connection Successful!",
+                    Toast.LENGTH_SHORT).show());
         }
 
         @Override
-        public void onMessage(WebSocket webSocket, String text) {
+        public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
             super.onMessage(webSocket, text);
 
             runOnUiThread(() -> {
