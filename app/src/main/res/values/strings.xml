@@ -1,4 +1,3 @@
 <resources>
     <string name="app_name">Yonde Kiku</string>
-    <string name="instruction">Say "hello" to start talking and "thanks" to end speech immediately or just pause</string>
 </resources>
