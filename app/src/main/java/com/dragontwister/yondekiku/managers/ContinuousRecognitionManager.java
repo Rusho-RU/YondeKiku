@@ -19,17 +19,14 @@ public class ContinuousRecognitionManager implements RecognitionListener {
     private final RecognitionCallback callback;
     private final String[] activationWords;
     private final String[] deactivationWords;
-    private boolean shouldMute;
+    private final boolean shouldMute;
 
-    private AudioManager audioManager;
+    private final AudioManager audioManager;
 
-    private SpeechRecognizer speech;
-    private Intent recognizerIntent;
-
-    public boolean isSpeaking = false;
+    private final SpeechRecognizer speech;
+    private final Intent recognizerIntent;
 
     private List<String> matches;
-    private int count = 0;
 
     public ContinuousRecognitionManager(Context context, String[] activationWords, String[] deactivationWords, boolean shouldMute, RecognitionCallback callback){
         this.callback = callback;
@@ -38,12 +35,6 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         this.shouldMute = shouldMute;
 
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        if (audioManager.isBluetoothA2dpOn()) {
-            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            audioManager.startBluetoothSco();
-            audioManager.setBluetoothScoOn(true);
-        }
-
         speech = SpeechRecognizer.createSpeechRecognizer(context);
 
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -55,6 +46,16 @@ public class ContinuousRecognitionManager implements RecognitionListener {
     }
 
     public void startRecognition(){
+        if (audioManager.isBluetoothA2dpOn()) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+            audioManager.startBluetoothSco();
+            audioManager.setBluetoothScoOn(true);
+        } else{
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+            audioManager.stopBluetoothSco();
+            audioManager.setBluetoothScoOn(false);
+        }
+
         speech.setRecognitionListener(this);
         speech.startListening(recognizerIntent);
     }
@@ -86,7 +87,7 @@ public class ContinuousRecognitionManager implements RecognitionListener {
 
     @Override
     public void onReadyForSpeech(Bundle params) {
-        muteRecognition(shouldMute || !isSpeaking);
+        muteRecognition(shouldMute);
     }
 
     @Override
@@ -118,16 +119,7 @@ public class ContinuousRecognitionManager implements RecognitionListener {
             case SpeechRecognizer.ERROR_SPEECH_TIMEOUT : {
                 destroyRecognizer();
             }
-            case SpeechRecognizer.ERROR_NO_MATCH:{
-                count++;
-                if(count==2 && matches.size() > 0) {
-                    isSpeaking = false;
-                    callback.onResults(matches);
-                    matches.clear();
-                    callback.onKeywordDetected("deactivate");
-                    count = 0;
-                }
-            }
+            case SpeechRecognizer.ERROR_NO_MATCH:{ }
         }
 
         startRecognition();
@@ -135,7 +127,6 @@ public class ContinuousRecognitionManager implements RecognitionListener {
 
     @Override
     public void onResults(Bundle results) {
-        count = 0;
         List<String> hold = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
         StringBuilder text = new StringBuilder();
@@ -143,22 +134,9 @@ public class ContinuousRecognitionManager implements RecognitionListener {
             text.append(hold.get(i));
         }
 
-        if(isSpeaking){
-            if(Arrays.stream(deactivationWords).anyMatch(text.toString()::contains)){
-                isSpeaking = false;
-                matches.add(text.toString());
-                callback.onResults(matches);
-                matches.clear();
-                callback.onKeywordDetected("deactivate");
-            } else{
-                matches.add(text.toString());
-            }
-        } else if(Arrays.stream(activationWords).anyMatch(text.toString()::contains)){
-            isSpeaking = true;
-            matches.clear();
-            matches.add(text.toString());
-            callback.onKeywordDetected("active");
-        }
+        matches.add(text.toString());
+        callback.onResults(matches);
+        matches.clear();
 
         startRecognition();
     }

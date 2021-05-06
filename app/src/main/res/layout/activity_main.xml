@@ -13,7 +13,6 @@
         android:layout_marginTop="15dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        android:visibility="invisible"
         android:max="10"/>
 
     <TextView
@@ -25,7 +24,6 @@
         android:layout_marginTop="15dp"
         android:paddingLeft="10dp"
         android:paddingRight="10dp"
-        android:visibility="invisible"
         android:text="@string/instruction"/>
 
     <androidx.recyclerview.widget.RecyclerView
