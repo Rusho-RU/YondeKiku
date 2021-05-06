@@ -72,9 +72,11 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         }
 
         EditText editText = new EditText(this);
+        editText.setAllCaps(true);
         new AlertDialog.Builder(this)
                 .setTitle("Enter name")
                 .setView(editText)
+                .setCancelable(false)
                 .setPositiveButton("confirm", (dialog, which) -> {
                     name = editText.getText().toString();
                     progressBar.setVisibility(View.VISIBLE);
