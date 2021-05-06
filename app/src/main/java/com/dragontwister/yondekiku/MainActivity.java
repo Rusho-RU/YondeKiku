@@ -25,10 +25,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Completable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -71,12 +67,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         progressBar = findViewById(R.id.progressBar);
         textView = findViewById(R.id.textView);
 
-        progressBar.setMax(10);
-        textView.setText("Say \"hello\" to start talking and \"thanks\" to end speech immediately or just pause");
-
-//          Speech Recognition Initialization
-        manager = new ContinuousRecognitionManager(this, activationWords, deactivationWords, false, this);
-
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_REQUEST_CODE);
         }
@@ -89,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
                     name = editText.getText().toString();
                     progressBar.setVisibility(View.VISIBLE);
                     textView.setVisibility(View.VISIBLE);
+//                    Speech Recognition Initialization
+                    manager = new ContinuousRecognitionManager(this, activationWords, deactivationWords, true, this);
                     manager.startRecognition();
                 })
                 .create()
