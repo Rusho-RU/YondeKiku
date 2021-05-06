@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ProgressBar;
 
 import com.dragontwister.yondekiku.interfaces.RecognitionCallback;
@@ -71,6 +72,10 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         } catch (JSONException e){
             e.printStackTrace();
         }
+    }
+
+    public void clearMessages(View view){
+        messageAdapter.clearItems();
     }
 
 //    Speech recognition functions

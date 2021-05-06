@@ -70,4 +70,9 @@ public class MessageAdapter extends RecyclerView.Adapter {
         messages.add(jsonObject);
         notifyDataSetChanged();
     }
+
+    public void clearItems(){
+        messages.clear();
+        notifyDataSetChanged();
+    }
 }
