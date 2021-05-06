@@ -19,12 +19,12 @@ public class ContinuousRecognitionManager implements RecognitionListener {
     private final RecognitionCallback callback;
     private final String[] activationWords;
     private final String[] deactivationWords;
-    private boolean shouldMute;
+    private final boolean shouldMute;
 
-    private AudioManager audioManager;
+    private final AudioManager audioManager;
 
-    private SpeechRecognizer speech;
-    private Intent recognizerIntent;
+    private final SpeechRecognizer speech;
+    private final Intent recognizerIntent;
 
     public boolean isSpeaking = false;
 
@@ -54,7 +54,7 @@ public class ContinuousRecognitionManager implements RecognitionListener {
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
             audioManager.startBluetoothSco();
             audioManager.setBluetoothScoOn(true);
-        } else{
+        } else if(audioManager.isBluetoothScoOn()){
             audioManager.setMode(AudioManager.MODE_NORMAL);
             audioManager.stopBluetoothSco();
             audioManager.setBluetoothScoOn(false);
@@ -168,8 +168,9 @@ public class ContinuousRecognitionManager implements RecognitionListener {
         } else if(Arrays.stream(activationWords).anyMatch(text.toString()::contains)){
             isSpeaking = true;
             matches.clear();
-            matches.add(text.toString());
-            callback.onKeywordDetected("active");
+            if(Arrays.stream(activationWords).anyMatch(text.toString()::equals))
+                matches.add(text.toString());
+            callback.onKeywordDetected("activate");
         }
 
         startRecognition();

@@ -33,13 +33,14 @@ import okhttp3.WebSocketListener;
 
 public class MainActivity extends AppCompatActivity implements RecognitionCallback {
 //    Speech Recognition variables
-    private final String[] activationWords = new String[] {"hello"};
-    private final String[] deactivationWords = new String[] {"thanks"};
+    private final String[] activationWords = new String[] {"hello", "halo", "hallo", "hi"};
+    private final String[] deactivationWords = new String[] {"thanks", "thank you"};
     private static final int RECORD_AUDIO_REQUEST_CODE = 101;
     private ContinuousRecognitionManager manager;
 
 //    Text View variables
     private ProgressBar progressBar;
+    private TextView textView;
     private String name = "Anonymous";
     private RecyclerView recyclerView;
     private MessageAdapter messageAdapter;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         progressBar = findViewById(R.id.progressBar);
+        textView = findViewById(R.id.textView);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_REQUEST_CODE);
@@ -78,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
                 .setPositiveButton("confirm", (dialog, which) -> {
                     name = editText.getText().toString();
                     progressBar.setVisibility(View.VISIBLE);
-                    findViewById(R.id.textView).setVisibility(View.VISIBLE);
+                    textView.setVisibility(View.VISIBLE);
                     findViewById(R.id.btnClear).setVisibility(View.VISIBLE);
 //                    Speech Recognition Initialization
                     manager = new ContinuousRecognitionManager(this, activationWords, deactivationWords, true, this);
@@ -103,7 +105,13 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
             jsonObject.put("message", string);
             webSocket.send(jsonObject.toString());
             jsonObject.put("isSent", true);
-            messageAdapter.addItem(jsonObject);
+
+            if(string == "~"){
+                textView.setText(name + " is speaking");
+            } else{
+                messageAdapter.addItem(jsonObject);
+            }
+
             if(messageAdapter.getItemCount() > 0)
                 recyclerView.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
         } catch (JSONException e){
@@ -119,10 +127,9 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
     @Override
     public void onKeywordDetected(String type){
         switch (type){
-            case "active": setTextView(name + " is speaking now...");
+            case "activate": setTextView("~");
             break;
-            case "deactivate" : setTextView(name + " has finished speech");
-            break;
+            case "deactivate": textView.setText("");
         }
     }
 
@@ -165,6 +172,12 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
             runOnUiThread(() -> {
                 try {
                     JSONObject jsonObject = new JSONObject(text);
+
+                    if(jsonObject.getString("message") == "~") {
+                        textView.setText(jsonObject.getString("name") + " is speaking");
+                        return;
+                    }
+
                     jsonObject.put("isSent", false);
 
                     messageAdapter.addItem(jsonObject);
