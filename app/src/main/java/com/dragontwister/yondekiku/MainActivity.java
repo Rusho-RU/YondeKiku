@@ -40,7 +40,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
 
 //    Text View variables
     private ProgressBar progressBar;
-    private TextView textView;
     private String name = "Anonymous";
     private RecyclerView recyclerView;
     private MessageAdapter messageAdapter;
@@ -65,7 +64,6 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         progressBar = findViewById(R.id.progressBar);
-        textView = findViewById(R.id.textView);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_REQUEST_CODE);
@@ -80,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
                 .setPositiveButton("confirm", (dialog, which) -> {
                     name = editText.getText().toString();
                     progressBar.setVisibility(View.VISIBLE);
-                    textView.setVisibility(View.VISIBLE);
+                    findViewById(R.id.textView).setVisibility(View.VISIBLE);
+                    findViewById(R.id.btnClear).setVisibility(View.VISIBLE);
 //                    Speech Recognition Initialization
                     manager = new ContinuousRecognitionManager(this, activationWords, deactivationWords, true, this);
                     manager.startRecognition();
@@ -110,6 +109,10 @@ public class MainActivity extends AppCompatActivity implements RecognitionCallba
         } catch (JSONException e){
             e.printStackTrace();
         }
+    }
+
+    public void clearMessages(View view){
+        messageAdapter.clearItems();
     }
 
 //    Speech recognition functions

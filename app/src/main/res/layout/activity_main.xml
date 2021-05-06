@@ -32,6 +32,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/textView"
+        android:layout_above="@id/btnClear"
         android:id="@+id/recyclerView"/>
+
+    <Button
+        android:id="@+id/btnClear"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="15dp"
+        android:onClick="clearMessages"
+        android:text="Clear"
+        android:textSize="18sp"
+        android:visibility="invisible"/>
 
 </RelativeLayout>
