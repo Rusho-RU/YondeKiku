@@ -125,10 +125,13 @@ public class ContinuousRecognitionManager implements RecognitionListener {
             }
             case SpeechRecognizer.ERROR_NO_MATCH:{
                 count++;
-                if(count==2 && matches.size() > 0) {
-                    isSpeaking = false;
+                if(count != 0 && !matches.isEmpty()){
                     callback.onResults(matches);
                     matches.clear();
+                }
+
+                if(count==2 && isSpeaking) {
+                    isSpeaking = false;
                     callback.onKeywordDetected("deactivate");
                     count = 0;
                 }
@@ -157,6 +160,10 @@ public class ContinuousRecognitionManager implements RecognitionListener {
                 callback.onKeywordDetected("deactivate");
             } else{
                 matches.add(text.toString());
+                if(matches.size()>15){
+                    callback.onResults(matches);
+                    matches.clear();
+                }
             }
         } else if(Arrays.stream(activationWords).anyMatch(text.toString()::contains)){
             isSpeaking = true;
